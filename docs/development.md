@@ -14,6 +14,9 @@ systemd/user/refresh-rate-sync-user.service           -> /usr/local/lib/systemd/
 systemd/suspend.d/*.conf       resume drop-ins        -> /etc/systemd/system/<unit>.service.d/
 icons/refresh-rate-*.svg       notification icons     -> /usr/share/icons/hicolor/scalable/apps/
 docs/*.md                      this documentation    -> /usr/local/share/doc/refresh-rate-sync/docs/
+tests/run-tests.sh             headless behavior tests (not installed)
+tests/fixtures/*.txt|json      saved dumps of xrandr / wlr-randr / hyprctl / swaymsg
+.github/workflows/ci.yml       CI: bash -n, shellcheck, test suite
 ```
 
 The two shell scripts hold 100 % of the logic; the rest is glue.
@@ -63,19 +66,43 @@ NAME WIDTH HEIGHT Hz MODE_ID IS_CURRENT(0|1)
 Keep resolution handling untouched: `pick_modes()` only ever considers modes
 with the same `WIDTHxHEIGHT` as the current one.
 
-## Testing without the real desktop
+## Testing
 
-The parsers can be exercised with stub commands placed first in `PATH`:
+Run the suite first -- it needs no root, no display and no desktop session:
+
+```bash
+./tests/run-tests.sh
+```
+
+It runs `set-mode.sh --dry-run` against the dumps in `tests/fixtures/` using
+stub commands injected through `PATH`, and asserts the guarantees:
+
+* the resolution in the plan line is always the current one (`..., 1920x1080)`);
+* `AC_HZ=max` picks the highest rate of that resolution, `BATTERY_HZ` the highest
+  rate at or below the target, `min` the lowest;
+* when no mode satisfies the target, the lowest mode of the *same* resolution is
+  used instead of jumping to another resolution;
+* `RATE_TOLERANCE` treats 59.94 as 60, and the output filters (`ONLY_INTERNAL`,
+  `SKIP_OUTPUTS`, `TARGET_OUTPUTS`) work. Note the fixtures use `DP-1` and
+  `eDP-1` on purpose: assert with an anchored regex (`^dry-run: DP-1 `), because
+  `DP-1` is a substring of `eDP-1`.
+
+The suite is hermetic: each case writes its own `XDG_CONFIG_HOME` override, which
+is the last config file read, so an installed `/etc/refresh-rate-sync.conf`
+cannot influence a test.
+
+To exercise a single backend by hand:
 
 ```bash
 mkdir -p /tmp/rrsfake && cd /tmp/rrsfake
-printf '#!/bin/sh\ncat /tmp/rrsfake/xrandr.txt\n' > xrandr && chmod +x xrandr
-PATH=/tmp/rrsfake:$PATH ~/refresh-rate-sync/lib/set-mode.sh ac --dry-run --backend=x11
-PATH=/tmp/rrsfake:$PATH ~/refresh-rate-sync/lib/set-mode.sh bat --dry-run --backend=wlr
+printf '#!/bin/sh\ncat %s\n' "$OLDPWD/tests/fixtures/xrandr-1080p144.txt" > xrandr
+chmod +x xrandr
+PATH=/tmp/rrsfake:$PATH ./lib/set-mode.sh ac --dry-run --backend=x11
+PATH=/tmp/rrsfake:$PATH ./lib/set-mode.sh bat --dry-run --backend=wlr
 ```
 
 Sample inputs worth keeping around: an `xrandr -q` dump, a `wlr-randr` dump,
-and `hyprctl monitors all -j` / `swaymsg -t get_outputs` JSON — including the
+and `hyprctl monitors all -j` / `swaymsg -t get_outputs` JSON -- including the
 old (`modes`) and new (`availableModes` / `available_modes`) key spellings.
 
 Full round trip on a live session (this really changes the panel):

@@ -9,6 +9,18 @@ telling you what changed.
 | AC adapter in   | the **highest** rate the panel offers (165 Hz here) |
 | On battery      | **60 Hz** (configurable, also `min`)                |
 
+**The resolution never changes.** Only the rate is touched, and always inside
+the mode list of the resolution you are currently using:
+
+| Current mode               | Plugged in             | On battery              |
+| -------------------------- | ---------------------- | ----------------------- |
+| `2560x1600 @ 165 Hz`       | `2560x1600 @ 165 Hz`   | `2560x1600 @ 60 Hz`     |
+| `1920x1080 @ 144 Hz`       | `1920x1080 @ 144 Hz`   | `1920x1080 @ 60 Hz`     |
+| `1680x1050 @ 120 Hz` (non native) | `1680x1050 @ 120 Hz` | `1680x1050 @ 60 Hz`   |
+| `1920x1080 @ 144 Hz`, no 60 Hz mode in that resolution | unchanged | `1920x1080 @ 75 Hz` (lowest available) |
+
+Every one of those cases is covered by the test suite ([tests/run-tests.sh](tests/run-tests.sh)).
+
 The change is triggered by a **udev rule**, so while nothing happens the
 project costs *nothing*: no daemon, no polling, no resident process. The only
 thing that ever runs is a `Type=oneshot` service that lives about two seconds
@@ -170,6 +182,24 @@ More: [docs/compatibility.md](docs/compatibility.md).
 * [docs/installing.md](docs/installing.md) — options, packaging, other distros
 * [docs/troubleshooting.md](docs/troubleshooting.md) — common problems
 * [docs/development.md](docs/development.md) — data flow, adding a backend, style
+
+---
+
+## Tests
+
+The interesting property is that the rate changes and the resolution does not,
+so it is pinned by a suite that runs headless, without root and without a
+display server: every case feeds a saved `xrandr` / `wlr-randr` / `hyprctl` /
+`swaymsg` dump to `set-mode.sh --dry-run` through a stub command in `PATH`.
+
+```bash
+./tests/run-tests.sh
+# 27 passed, 0 failed
+```
+
+Fixtures live in `tests/fixtures/`; how to add a case is described in
+[docs/development.md](docs/development.md). GitHub Actions runs the suite plus
+`bash -n` and `shellcheck` on every push ([.github/workflows/ci.yml](.github/workflows/ci.yml)).
 
 ---
 

@@ -11,10 +11,11 @@
 | [compatibility.md](compatibility.md) | Desktops, backends, command lines used, edge cases |
 | [installing.md](installing.md) | Installer options, one-liner install, packaging, other distros |
 | [troubleshooting.md](troubleshooting.md) | Nothing happens / no notification / wrong rate / how to debug |
-| [development.md](development.md) | Data flow, the normalized mode list, adding a new backend |
+| [development.md](development.md) | Data flow, the normalized mode list, adding a new backend, the test suite |
 
 Quick links:
 
 * Source and issue tracker: <https://github.com/OWNER/refresh-rate-sync>
 * Everything you need to run it: `./install.sh` (it asks for root itself)
+* Test suite (headless, no root): `./tests/run-tests.sh`
 * Live log of what it does: `journalctl -t refresh-rate-sync -f`

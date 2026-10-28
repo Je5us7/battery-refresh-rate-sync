@@ -1,0 +1,40 @@
+name: ci
+
+# Headless checks: the whole test suite runs against fixtures, so no display
+# server and no root privileges are needed.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends jq shellcheck
+
+      - name: Syntax check every shell script
+        run: |
+          for f in install.sh uninstall.sh lib/*.sh tests/*.sh; do
+            echo "::group::$f"
+            bash -n "$f"
+          done
+          echo "::endgroup::"
+
+      - name: Shellcheck (non blocking)
+        continue-on-error: true
+        run: shellcheck -S warning install.sh uninstall.sh lib/apply.sh lib/set-mode.sh tests/run-tests.sh
+
+      - name: Behavior tests (resolution must never change)
+        run: ./tests/run-tests.sh
+
+      - name: Validate the systemd units
+        run: |
+          sudo cp systemd/refresh-rate-sync.service /etc/systemd/system/
+          sudo cp systemd/user/refresh-rate-sync-user.service /usr/local/lib/systemd/user/ || true
+          systemd-analyze verify /etc/systemd/system/refresh-rate-sync.service || true

@@ -1,0 +1,8 @@
+eDP-1 name "BOE 0x09ED"
+  enable
+  mode 1920x1080 144Hz preferred
+  mode 1920x1080 60Hz current
+  mode 1280x720 60Hz
+DP-1 name "Dell Inc. S2722DGM"
+  enable
+  mode 2560x1440 165Hz current preferred

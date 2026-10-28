@@ -1,0 +1,4 @@
+Screen 0: minimum 320 x 200, current 1920 x 1080, maximum 16384 x 16384
+eDP-1 connected primary 1920x1080+0+0 (normal left inverted right x axis y axis) 309mm x 193mm
+   1920x1080     144.00*+  120.00  75.00    
+   1280x720      60.00  
