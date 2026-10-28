@@ -8,7 +8,7 @@
 #
 set -euo pipefail
 
-GITHUB_REPO_DEFAULT="${GITHUB_REPO:-refresh-rate-sync/refresh-rate-sync}"
+GITHUB_REPO_DEFAULT="${GITHUB_REPO:-Je5us7/refresh-rate-sync}"
 GITHUB_REF_DEFAULT="${GITHUB_REF:-main}"
 
 ROOT=${DESTDIR:-}

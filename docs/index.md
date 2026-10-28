@@ -15,7 +15,7 @@
 
 Quick links:
 
-* Source and issue tracker: <https://github.com/OWNER/refresh-rate-sync>
+* Source and issue tracker: <https://github.com/Je5us7/refresh-rate-sync>
 * Everything you need to run it: `./install.sh` (it asks for root itself)
 * Test suite (headless, no root): `./tests/run-tests.sh`
 * Live log of what it does: `journalctl -t refresh-rate-sync -f`

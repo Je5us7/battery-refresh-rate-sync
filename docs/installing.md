@@ -3,7 +3,7 @@
 ## From a clone
 
 ```bash
-git clone https://github.com/OWNER/refresh-rate-sync
+git clone https://github.com/Je5us7/refresh-rate-sync
 cd refresh-rate-sync
 ./install.sh
 ```
@@ -15,8 +15,8 @@ on screen). Everything after that is non-interactive.
 ## One-liner (nothing to clone)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/OWNER/refresh-rate-sync/main/install.sh \
-  | sudo bash -s -- --repo=OWNER/refresh-rate-sync --ref=main
+curl -fsSL https://raw.githubusercontent.com/Je5us7/refresh-rate-sync/main/install.sh \
+  | sudo bash -s -- --repo=Je5us7/refresh-rate-sync --ref=main
 ```
 
 When the script cannot find `lib/set-mode.sh` next to itself it downloads the
@@ -34,7 +34,7 @@ GITHUB_REPO_DEFAULT="${GITHUB_REPO:-yourgithubuser/refresh-rate-sync}"
 
 | Option | Effect |
 | ------ | ------ |
-| `--repo=OWNER/NAME` | repository to download from when the tree is not next to the script |
+| `--repo=Je5us7/NAME` | repository to download from when the tree is not next to the script |
 | `--ref=BRANCH\|TAG` | git ref to download (default `main`) |
 | `--dest=PATH` | install into an alternate root (equivalent to `DESTDIR=`), units are not enabled there |
 | `--libexec=PATH` | where the scripts go (default `<dest>/usr/local/lib/refresh-rate-sync`); a `LIBEXEC=` line is added to the config so `apply.sh` finds `set-mode.sh` |

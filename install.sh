@@ -7,8 +7,8 @@
 # whatever it needs from GitHub when the files are not next to the script.
 #
 #   sudo ./install.sh
-#   curl -fsSL https://raw.githubusercontent.com/OWNER/refresh-rate-sync/main/install.sh \
-#       | sudo bash -s -- --repo=OWNER/refresh-rate-sync
+#   curl -fsSL https://raw.githubusercontent.com/Je5us7/refresh-rate-sync/main/install.sh \
+#       | sudo bash -s -- --repo=Je5us7/refresh-rate-sync
 #   sudo ./install.sh --uninstall
 #
 # All comments in this project are in English; the desktop notifications are
@@ -17,10 +17,10 @@
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
-# Change this to your GitHub repository (OWNER/NAME) if you want the one-liner
+# Change this to your GitHub repository (Je5us7/NAME) if you want the one-liner
 # installer to work without passing --repo= every time.
 # ---------------------------------------------------------------------------
-GITHUB_REPO_DEFAULT="${GITHUB_REPO:-refresh-rate-sync/refresh-rate-sync}"
+GITHUB_REPO_DEFAULT="${GITHUB_REPO:-Je5us7/refresh-rate-sync}"
 GITHUB_REF_DEFAULT="${GITHUB_REF:-main}"
 
 # every file the project needs, relative to the repository root
@@ -54,7 +54,7 @@ usage() {
     cat <<'EOF'
 refresh-rate-sync installer
 
-  --repo=OWNER/NAME    GitHub repository used to download the files when they
+  --repo=Je5us7/NAME    GitHub repository used to download the files when they
                        are not next to this script
   --ref=BRANCH|TAG     git ref to download (default: main)
   --dest=PATH          install into an alternate root tree (same as DESTDIR)
