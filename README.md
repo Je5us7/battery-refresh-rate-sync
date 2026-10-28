@@ -57,22 +57,37 @@ unplug the charger ──► kernel uevent (POWER_SUPPLY_ONLINE=0)
 ## Install
 
 ```bash
-# from a clone
-git clone https://github.com/Je5us7/battery-refresh-rate-sync
-cd refresh-rate-sync
-./install.sh            # re-executes itself through sudo (or a polkit dialog)
+git clone git@github.com:Je5us7/battery-refresh-rate-sync.git   # or the HTTPS URL
+cd battery-refresh-rate-sync
+./install.sh            # asks for root itself: sudo, or a polkit dialog
 ```
 
-or the one-liner (it downloads only what it needs, installs and removes itself):
+`install.sh` can also fetch the project by itself, with nothing cloned. On a
+**public** repository that is a one-liner:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Je5us7/battery-refresh-rate-sync/main/install.sh \
-  | sudo bash -s -- --repo=Je5us7/battery-refresh-rate-sync
+curl -fsSL https://raw.githubusercontent.com/Je5us7/battery-refresh-rate-sync/main/install.sh | sudo bash
 ```
 
-`--repo=` / `--ref=` select the repository and branch used for the download; if
-you publish this project, set your own `Je5us7` in `GITHUB_REPO_DEFAULT` at the
-top of `install.sh` and the flag becomes optional.
+On a **private** repository `raw.githubusercontent.com` needs a token, so let the
+script use your SSH key instead -- either `--git` with a single copied script:
+
+```bash
+curl -fsSL "https://raw.githubusercontent.com/Je5us7/battery-refresh-rate-sync/main/install.sh?token=…" -o /tmp/i.sh
+sudo bash /tmp/i.sh --git
+```
+
+…or simply clone, which is what this project does on your own machine:
+
+```bash
+git clone --depth 1 git@github.com:Je5us7/battery-refresh-rate-sync.git /tmp/bfrs
+sudo bash /tmp/bfrs/install.sh
+```
+
+`--repo=` / `--ref=` / `--git` say where the files come from; when the HTTPS
+download fails (404 on a private repo) the script falls back to `git clone` over
+SSH automatically. `GITHUB_REPO_DEFAULT` at the top of `install.sh` already
+points at this repository, so no flag is needed for the default branch.
 
 Uninstall:
 

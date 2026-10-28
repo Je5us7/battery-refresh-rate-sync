@@ -3,8 +3,8 @@
 ## From a clone
 
 ```bash
-git clone https://github.com/Je5us7/battery-refresh-rate-sync
-cd refresh-rate-sync
+git clone git@github.com:Je5us7/battery-refresh-rate-sync.git
+cd battery-refresh-rate-sync
 ./install.sh
 ```
 
@@ -14,21 +14,39 @@ on screen). Everything after that is non-interactive.
 
 ## One-liner (nothing to clone)
 
+For a **public** repository:
+
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Je5us7/battery-refresh-rate-sync/main/install.sh \
-  | sudo bash -s -- --repo=Je5us7/battery-refresh-rate-sync --ref=main
+curl -fsSL https://raw.githubusercontent.com/Je5us7/battery-refresh-rate-sync/main/install.sh | sudo bash
 ```
+
+For a **private** repository `raw.githubusercontent.com` is not reachable
+anonymously, so the installer must get the tree with `git` (your SSH key, no
+token) — clone it into a scratch directory and install from there:
+
+```bash
+git clone --depth 1 git@github.com:Je5us7/battery-refresh-rate-sync.git /tmp/bfrs
+sudo bash /tmp/bfrs/install.sh
+rm -rf /tmp/bfrs
+```
+
+If you already have `install.sh` somewhere (scp, a paste, a token-authenticated
+download) `--git` makes it clone the rest itself:
+
+```bash
+sudo bash ./install.sh --git --ref=main
+```
+
+The fallback is automatic: when the HTTPS download fails the script retries with
+`git clone` over SSH and only then over anonymous HTTPS.
 
 When the script cannot find `lib/set-mode.sh` next to itself it downloads the
 whole file list into a temporary directory, installs it and deletes the
 directory. `wget` works too, so no `curl` dependency on a machine that lacks it.
 
-If you fork/publish the project, edit `GITHUB_REPO_DEFAULT` at the top of
-`install.sh` and the `--repo=` flag becomes unnecessary:
-
-```bash
-GITHUB_REPO_DEFAULT="${GITHUB_REPO:-yourgithubuser/refresh-rate-sync}"
-```
+`GITHUB_REPO_DEFAULT` / `GITHUB_REF_DEFAULT` at the top of `install.sh` decide
+the repository and branch used, so `--repo=` and `--ref=` are only needed when
+installing from somebody else's fork:
 
 ## Options
 
@@ -36,6 +54,7 @@ GITHUB_REPO_DEFAULT="${GITHUB_REPO:-yourgithubuser/refresh-rate-sync}"
 | ------ | ------ |
 | `--repo=OWNER/NAME` | repository to download from when the tree is not next to the script |
 | `--ref=BRANCH\|TAG` | git ref to download (default `main`) |
+| `--git` | fetch with `git clone` (SSH first, anonymous HTTPS second) instead of the raw HTTPS download — what you want for a private repository |
 | `--dest=PATH` | install into an alternate root (equivalent to `DESTDIR=`), units are not enabled there |
 | `--libexec=PATH` | where the scripts go (default `<dest>/usr/local/lib/refresh-rate-sync`); a `LIBEXEC=` line is added to the config so `apply.sh` finds `set-mode.sh` |
 | `--force-config` | overwrite `/etc/refresh-rate-sync.conf` instead of writing `.dpkg-new` |
@@ -52,6 +71,7 @@ Examples:
 sudo DESTDIR=/mnt ./install.sh                     # install into a chroot/image
 sudo ./install.sh --force-config                   # take the new default config
 sudo ./install.sh --no-apply --skip-user-unit      # package-friendly install
+sudo ./install.sh --git                            # clone the repo over SSH
 sudo ./uninstall.sh --keep-config                  # remove, keep the config
 ```
 
