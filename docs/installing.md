@@ -56,8 +56,8 @@ installing from somebody else's fork:
 | `--ref=BRANCH\|TAG` | git ref to download (default `main`) |
 | `--git` | fetch with `git clone` (SSH first, anonymous HTTPS second) instead of the raw HTTPS download — what you want for a private repository |
 | `--dest=PATH` | install into an alternate root (equivalent to `DESTDIR=`), units are not enabled there |
-| `--libexec=PATH` | where the scripts go (default `<dest>/usr/local/lib/refresh-rate-sync`); a `LIBEXEC=` line is added to the config so `apply.sh` finds `set-mode.sh` |
-| `--force-config` | overwrite `/etc/refresh-rate-sync.conf` instead of writing `.dpkg-new` |
+| `--libexec=PATH` | where the scripts go (default `<dest>/usr/local/lib/battery-refresh-rate-sync`); a `LIBEXEC=` line is added to the config so `apply.sh` finds `set-mode.sh` |
+| `--force-config` | overwrite `/etc/battery-refresh-rate-sync.conf` instead of writing `.dpkg-new` |
 | `--no-apply` | do not apply the current power state at the end of the install |
 | `--skip-user-unit` | do not enable the per-session user unit |
 | `--uninstall` | same as running `uninstall.sh` |
@@ -77,7 +77,7 @@ sudo ./uninstall.sh --keep-config                  # remove, keep the config
 
 ## What enabling means
 
-* `refresh-rate-sync.service` is `systemctl enable`d (wants `multi-user.target`
+* `battery-refresh-rate-sync.service` is `systemctl enable`d (wants `multi-user.target`
   so the correct rate is applied once at boot).
 * The user unit is enabled with `systemctl --user --global enable`, which
   creates `/etc/systemd/user/graphical-session.target.wants/…` and therefore
@@ -104,16 +104,16 @@ makepkg / dpkg-buildpackage / rpmbuild:
     ./install.sh --dest="$pkgdir" --no-apply --skip-user-unit
 ```
 
-and enable `refresh-rate-sync.service` (plus
-`systemctl --user --global enable refresh-rate-sync-user.service`) in the
+and enable `battery-refresh-rate-sync.service` (plus
+`systemctl --user --global enable battery-refresh-rate-sync-user.service`) in the
 package's install scriptlet.
 
 ## Verification after install
 
 ```bash
-systemctl status refresh-rate-sync.service      # enabled, inactive (dead)
+systemctl status battery-refresh-rate-sync.service      # enabled, inactive (dead)
 systemctl cat systemd-suspend.service | tail    # the resume drop-in is there
-udevadm verify /etc/udev/rules.d/85-refresh-rate-sync.rules
-sudo /usr/local/lib/refresh-rate-sync/apply.sh --status
-journalctl -b -t refresh-rate-sync | tail -20
+udevadm verify /etc/udev/rules.d/85-battery-refresh-rate-sync.rules
+sudo /usr/local/lib/battery-refresh-rate-sync/apply.sh --status
+journalctl -b -t battery-refresh-rate-sync | tail -20
 ```

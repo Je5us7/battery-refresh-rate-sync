@@ -16,7 +16,7 @@ SRC=$TESTS/../lib/set-mode.sh
 FIX=$TESTS/fixtures
 [ -x "$SRC" ] || { echo "set-mode.sh not found/executable: $SRC" >&2; exit 1; }
 
-TMP=$(mktemp -d /tmp/refresh-rate-sync-tests.XXXXXX)
+TMP=$(mktemp -d /tmp/battery-refresh-rate-sync-tests.XXXXXX)
 trap 'rm -rf "$TMP"' EXIT
 mkdir -p "$TMP/bin" "$TMP/xdg"
 
@@ -26,7 +26,7 @@ PASS=0 FAIL=0
 # Helpers
 # --------------------------------------------------------------------------
 # Hermetic config: always pins both targets so an installed
-# /etc/refresh-rate-sync.conf cannot influence a test.
+# /etc/battery-refresh-rate-sync.conf cannot influence a test.
 mkconf() {   # mkconf [KEY=value ...]
     {
         echo 'NOTIFY=0'
@@ -34,7 +34,7 @@ mkconf() {   # mkconf [KEY=value ...]
         echo 'AC_HZ=max'
         echo 'BATTERY_HZ=60'
         printf '%s\n' "$@"
-    } > "$TMP/xdg/refresh-rate-sync.conf"
+    } > "$TMP/xdg/battery-refresh-rate-sync.conf"
 }
 
 # stub <command> <fixture-file> : make <command> print the fixture

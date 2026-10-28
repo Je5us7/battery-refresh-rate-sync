@@ -17,7 +17,7 @@ This project has **no resident process at all**.
                                    ▼
    udevd (always running, part of every Linux) evaluates its rule table:
        ACTION=="change", SUBSYSTEM=="power_supply", ATTR{type}=="Mains"
-         RUN+="/usr/bin/systemctl --no-block restart refresh-rate-sync.service"
+         RUN+="/usr/bin/systemctl --no-block restart battery-refresh-rate-sync.service"
                                    │
                                    ▼
    systemd starts a Type=oneshot unit  ──  it runs ~2 s and goes back to
@@ -37,8 +37,8 @@ Three extra safety nets, all of them oneshot and event-driven:
 
 | Unit | When it runs |
 | ---- | ------------ |
-| `refresh-rate-sync.service` (`WantedBy=multi-user.target`) | once at boot |
-| `refresh-rate-sync-user.service` (`WantedBy=graphical-session.target`) | at each graphical login |
+| `battery-refresh-rate-sync.service` (`WantedBy=multi-user.target`) | once at boot |
+| `battery-refresh-rate-sync-user.service` (`WantedBy=graphical-session.target`) | at each graphical login |
 | drop-ins on `systemd-suspend.service` / `systemd-hibernate.service` / `systemd-hybrid-sleep.service` / `systemd-suspend-then-hibernate.service` | right after resume (`ExecStartPost` of those units runs when the machine is awake again) |
 
 ## Why "zero resources" is not marketing
@@ -53,17 +53,17 @@ Three extra safety nets, all of them oneshot and event-driven:
 Verify on a running system:
 
 ```bash
-systemctl status refresh-rate-sync.service      # Active: inactive (dead)
+systemctl status battery-refresh-rate-sync.service      # Active: inactive (dead)
 pgrep -af refresh-rate                          # (no output)
-systemd-analyze critical-chain refresh-rate-sync.service   # not in the boot path
-journalctl -b -t refresh-rate-sync              # what it did, and its peak RAM/CPU
+systemd-analyze critical-chain battery-refresh-rate-sync.service   # not in the boot path
+journalctl -b -t battery-refresh-rate-sync              # what it did, and its peak RAM/CPU
 ```
 
 Example of a real event, straight from the journal (peak memory 5.7 MB, 60 ms
 of CPU, then dead again):
 
 ```
-Process: 217142 ExecStart=/usr/local/lib/refresh-rate-sync/apply.sh auto (code=exited, status=0/SUCCESS)
+Process: 217142 ExecStart=/usr/local/lib/battery-refresh-rate-sync/apply.sh auto (code=exited, status=0/SUCCESS)
      Mem peak: 5.7M
       CPU: 60ms
 ```
@@ -80,7 +80,7 @@ authority, the compositor's IPC socket, the session D-Bus). Everything screen
 related lives here, so it can also be run by hand without root:
 
 ```bash
-/usr/local/lib/refresh-rate-sync/set-mode.sh ac --dry-run
+/usr/local/lib/battery-refresh-rate-sync/set-mode.sh ac --dry-run
 ```
 
 ## How the session environment is reconstructed
@@ -104,7 +104,7 @@ The command is then launched with a clean, explicit environment:
 ```bash
 runuser -u alice -- env -i WAYLAND_DISPLAY=wayland-1 XDG_RUNTIME_DIR=/run/user/1000 \
     DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus ... \
-    bash /usr/local/lib/refresh-rate-sync/set-mode.sh bat
+    bash /usr/local/lib/battery-refresh-rate-sync/set-mode.sh bat
 ```
 
 `runuser` is used when present, otherwise `setpriv`, otherwise `sudo -n -u`.
@@ -146,4 +146,5 @@ is silent. `notify-send` with:
   `grimshot`/`grim`/`spectacle`/`gnome-screenshot`/`scrot`/ImageMagick, and
   down-scales with ImageMagick when available).
 
-Strings exist in Spanish and English; `NOTIFY_LANG=auto` follows `LANG`.
+The text is English only: translating the notification means translating four
+strings in `notify_change()` and `notify_error()`, nothing else.

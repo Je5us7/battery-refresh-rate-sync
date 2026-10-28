@@ -24,11 +24,11 @@ umask 077
 SELF_DIR=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]:-$0}")")" && pwd)
 
 # ---------------------------------------------------------------------------
-# Configuration ( /etc/refresh-rate-sync.conf and ~/.config/refresh-rate-sync.conf )
+# Configuration ( /etc/battery-refresh-rate-sync.conf and ~/.config/battery-refresh-rate-sync.conf )
 # ---------------------------------------------------------------------------
 BATTERY_HZ=60        # on battery: number of Hz, "max" or "min"
 AC_HZ=max            # on AC power: number of Hz, or "max"
-RRS_BACKEND=auto     # kde|hyprland|sway|wlr|x11|auto
+BFRS_BACKEND=auto     # kde|hyprland|sway|wlr|x11|auto
 ONLY_INTERNAL=0      # 1 = only the built-in panel (eDP/LVDS/DSI/DSL)
 TARGET_OUTPUTS=""    # if not empty, handle only these outputs
 SKIP_OUTPUTS=""      # outputs to ignore
@@ -41,13 +41,12 @@ NOTIFY_ICON=1        # use the installed "little monitor" icon
 NOTIFY_SNAPSHOT=0    # 1 = attach a screenshot thumbnail to the notification
 NOTIFY_TIMEOUT=5000  # notification lifetime (ms)
 NOTIFY_FAIL=1        # also notify when the change failed
-NOTIFY_LANG=auto     # notification language: auto|es|en
 NO_BATTERY_STATE=ac  # desktops without a battery: ac|bat|ignore
 BACKEND_RETRIES=3     # backend detection retries (session still starting up)
 BACKEND_RETRY_DELAY=2 # seconds between those retries
 
-for f in /etc/refresh-rate-sync.conf \
-         "${XDG_CONFIG_HOME:-$HOME/.config}/refresh-rate-sync.conf"; do
+for f in /etc/battery-refresh-rate-sync.conf \
+         "${XDG_CONFIG_HOME:-$HOME/.config}/battery-refresh-rate-sync.conf"; do
     # shellcheck disable=SC1090
     [ -r "$f" ] && . "$f"
 done
@@ -69,16 +68,8 @@ fcmp() { LC_ALL=C awk -v a="$1" -v b="$2" -v op="$3" 'BEGIN{
     exit !((op=="lt")?(a+0<b+0):(op=="le")?(a+0<=b+0):(op=="gt")?(a+0>b+0):
            (op=="ge")?(a+0>=b+0):(op=="eq")?(a+0==b+0):(a+0!=b+0)) }'; }
 
-# Notification strings are bilingual; pick the language now, then t <es> <en>.
-case "${NOTIFY_LANG:-auto}" in
-    es|es_ES|es_ES.UTF-8) T_ES=1 ;;
-    en*)                  T_ES=0 ;;
-    *) case "${LANG:-}${LC_MESSAGES:-}" in
-           es*) T_ES=1 ;;
-           *)   T_ES=0 ;;
-       esac ;;
-esac
-t() { if [ "$T_ES" = 1 ]; then printf '%s' "$1"; else printf '%s' "$2"; fi; }
+# The notification text is plain English; anyone wanting another language only
+# has to translate the few strings in notify_change() / notify_error().
 
 # ---------------------------------------------------------------------------
 # Power state
@@ -104,8 +95,8 @@ power_state() {
 RTDIR=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
 
 backend_candidates() {
-    case "$RRS_BACKEND" in
-        kde|hyprland|sway|wlr|x11) echo "$RRS_BACKEND"; return ;;
+    case "$BFRS_BACKEND" in
+        kde|hyprland|sway|wlr|x11) echo "$BFRS_BACKEND"; return ;;
     esac
     # Plasma first: kscreen-doctor is the only way in on KDE's Wayland session
     if have kscreen-doctor && [ -n "${WAYLAND_DISPLAY:-}${DISPLAY:-}" ]; then echo kde; fi
@@ -334,7 +325,7 @@ find_icon() {
     for p in /usr/share/icons/hicolor/scalable/apps \
              /usr/local/share/icons/hicolor/scalable/apps \
              "$SELF_DIR/icons" "$SELF_DIR/../icons"; do
-        f="$p/refresh-rate-$state.svg"
+        f="$p/battery-refresh-rate-$state.svg"
         if [ -r "$f" ]; then readlink -f -- "$f"; return 0; fi
     done
     return 1
@@ -346,11 +337,11 @@ notify_change() {
     have notify-send || return 0
 
     if [ "$state" = ac ]; then
-        title=$(t "Tasa de refresco al maximo" "Maximum refresh rate set")
-        body=$(t "Conectado a la corriente electrica" "Plugged into the mains")
+        title="Maximum refresh rate set"
+        body="Plugged into the mains"
     else
-        title=$(t "Tasa de refresco reducida" "Refresh rate reduced")
-        body=$(t "Funcionando con la bateria" "Running on battery")
+        title="Refresh rate reduced"
+        body="Running on battery"
     fi
     body="$body"$'\n'$(printf '%s\n' "$summary" |
         awk 'NF{printf "%s: %s Hz \xe2\x86\x92 %s Hz\n", $1, $2, $3}')
@@ -359,7 +350,7 @@ notify_change() {
     icon=$(find_icon "$state") || icon="video-display-symbolic"
 
     if [ "$NOTIFY_SNAPSHOT" = 1 ]; then
-        img="${TMPDIR:-/tmp}/refresh-rate-sync.$(date +%s).png"
+        img="${TMPDIR:-/tmp}/battery-refresh-rate-sync.$(date +%s).png"
         local ok=0
         if   have grimshot;         then grimshot  save -- "$img" >/dev/null 2>&1 && ok=1
         elif have grim;             then grim "$img" >/dev/null 2>&1 && ok=1
@@ -376,7 +367,7 @@ notify_change() {
         fi
     fi
 
-    notify-send -a "refresh-rate-sync" -i "$icon" -t "$NOTIFY_TIMEOUT" \
+    notify-send -a "battery-refresh-rate-sync" -i "$icon" -t "$NOTIFY_TIMEOUT" \
         "${hints[@]}" -- "$title" "$body" >/dev/null 2>&1 || true
 
     [ -n "${img:-}" ] && rm -f -- "$img"
@@ -387,11 +378,10 @@ notify_error() {
     [ "$NOTIFY" = 1 ] || return 0
     [ "$NOTIFY_FAIL" = 1 ] || return 0
     have notify-send || return 0
-    notify-send -a "refresh-rate-sync" -i "$(find_icon ac || echo video-display-symbolic)" \
+    notify-send -a "battery-refresh-rate-sync" -i "$(find_icon ac || echo video-display-symbolic)" \
         -u critical -t 8000 -- \
-        "$(t "Tasa de refresco" "Refresh rate")" \
-        "$(t "No hay soporte para este escritorio: no se pudo cambiar la tasa de refresco." \
-             "This desktop is not supported: could not change the refresh rate.")" \
+        "Refresh rate" \
+        "This desktop is not supported: could not change the refresh rate." \
         >/dev/null 2>&1 || true
 }
 
@@ -407,9 +397,9 @@ for a in "$@"; do
         --force)       FORCE=1 ;;
         --quiet|-q)    QUIET=1 ;;
         --dry-run|-n)  DRY=1 ;;
-        --backend=*)   RRS_BACKEND=${a#--backend=} ;;
+        --backend=*)   BFRS_BACKEND=${a#--backend=} ;;
         --help|-h)     sed -n '3,20p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
-        *)             die "$(t 'argumento desconocido' 'unknown argument'): $a" ;;
+        *)             die "unknown argument: $a" ;;
     esac
 done
 
@@ -438,7 +428,7 @@ while : ; do
     sleep "$BACKEND_RETRY_DELAY"
 done
 if [ -z "$BACKEND" ]; then
-    log "set-mode: no backend available (RRS_BACKEND=$RRS_BACKEND)"
+    log "set-mode: no backend available (BFRS_BACKEND=$BFRS_BACKEND)"
     notify_error
     exit 2
 fi

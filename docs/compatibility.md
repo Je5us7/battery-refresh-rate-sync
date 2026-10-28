@@ -19,7 +19,7 @@ distribution except runit/runit-based or sysvinit-only setups — see
 
 If several tools exist (a Plasma session with `xrandr` installed, for example),
 `auto` picks the one that matches the running session, and you can force another
-one with `RRS_BACKEND=` in the config or `--backend=` on the command line.
+one with `BFRS_BACKEND=` in the config or `--backend=` on the command line.
 
 ## GNOME
 
@@ -43,7 +43,7 @@ images without systemd you can still use the logic directly from a udev rule:
 
 ```
 ACTION=="change", SUBSYSTEM=="power_supply", ATTR{type}=="Mains", \
-  RUN+="/usr/local/lib/refresh-rate-sync/set-mode.sh auto"
+  RUN+="/usr/local/lib/battery-refresh-rate-sync/set-mode.sh auto"
 ```
 
 In that case the rule runs as root, so `set-mode.sh` needs the session

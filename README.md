@@ -1,4 +1,4 @@
-# refresh-rate-sync
+# battery-refresh-rate-sync
 
 Automatic refresh-rate switching for laptops on Linux: **max Hz while plugged
 in**, **60 Hz on battery**, with a desktop notification (a little monitor icon)
@@ -39,7 +39,7 @@ unplug the charger ──► kernel uevent (POWER_SUPPLY_ONLINE=0)
              udev rule: SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ACTION=="change"
                              │  ← tables inside udev, no process, no CPU
                              ▼
-             systemctl restart refresh-rate-sync.service      (oneshot, root)
+             systemctl restart battery-refresh-rate-sync.service      (oneshot, root)
                              │
                              ▼
              apply.sh  ── finds your graphical session (loginctl + /run/user/N + /proc/N/environ)
@@ -101,18 +101,17 @@ Details, options and packaging notes: [docs/installing.md](docs/installing.md).
 
 ## Configure
 
-`/etc/refresh-rate-sync.conf` — or per user in `~/.config/refresh-rate-sync.conf`.
+`/etc/battery-refresh-rate-sync.conf` — or per user in `~/.config/battery-refresh-rate-sync.conf`.
 **No restart is needed**: the service re-reads it on every event.
 
 ```ini
 AC_HZ=max              # plugged in: "max" = highest the panel offers (or 165, 120, ...)
 BATTERY_HZ=60          # on battery: Hz, or "max" / "min"
 ONLY_INTERNAL=0        # 1 = never touch external monitors
-RRS_BACKEND=auto       # auto | kde | hyprland | sway | wlr | x11
+BFRS_BACKEND=auto       # auto | kde | hyprland | sway | wlr | x11
 NOTIFY=1               # 0 = silent
 NOTIFY_ICON=1          # "little monitor" icon in the notification
 NOTIFY_SNAPSHOT=0      # 1 = also attach a screenshot thumbnail
-NOTIFY_LANG=auto       # auto (follows $LANG) | es | en
 SKIP_OUTPUTS=""        # e.g. "DP-3"
 ```
 
@@ -131,7 +130,7 @@ Full reference: [docs/configuration.md](docs/configuration.md).
 ## Test it without touching the cable
 
 ```bash
-L=/usr/local/lib/refresh-rate-sync
+L=/usr/local/lib/battery-refresh-rate-sync
 
 sudo $L/apply.sh --status          # which session/environment it found
 sudo $L/apply.sh bat --dry-run     # what it would do on battery
@@ -141,7 +140,7 @@ sudo $L/apply.sh ac                # back to max
 $L/set-mode.sh ac --quiet          # run it yourself, no notification
 
 sudo udevadm monitor -p -s power_supply     # watch the real unplug event
-journalctl -t refresh-rate-sync -f          # watch what the service does
+journalctl -t battery-refresh-rate-sync -f          # watch what the service does
 ```
 
 ---
@@ -176,15 +175,15 @@ More: [docs/compatibility.md](docs/compatibility.md).
 
 | Path | Purpose |
 | ---- | ------- |
-| `/usr/local/lib/refresh-rate-sync/{apply,set-mode}.sh` | the whole logic |
-| `/usr/local/lib/refresh-rate-sync/icons/` | notification icons |
-| `/etc/refresh-rate-sync.conf` | configuration |
-| `/etc/udev/rules.d/85-refresh-rate-sync.rules` | the trigger |
-| `/etc/systemd/system/refresh-rate-sync.service` | oneshot started by that rule |
-| `/usr/local/lib/systemd/user/refresh-rate-sync-user.service` | oneshot at session start |
-| `/etc/systemd/system/systemd-{suspend,hibernate,...}.service.d/10-refresh-rate-sync.conf` | re-apply after resume |
-| `/usr/share/icons/hicolor/scalable/apps/refresh-rate-{ac,battery}.svg` | the "little monitor" icons |
-| `/usr/local/share/doc/refresh-rate-sync/` | this README and the docs |
+| `/usr/local/lib/battery-refresh-rate-sync/{apply,set-mode}.sh` | the whole logic |
+| `/usr/local/lib/battery-refresh-rate-sync/icons/` | notification icons |
+| `/etc/battery-refresh-rate-sync.conf` | configuration |
+| `/etc/udev/rules.d/85-battery-refresh-rate-sync.rules` | the trigger |
+| `/etc/systemd/system/battery-refresh-rate-sync.service` | oneshot started by that rule |
+| `/usr/local/lib/systemd/user/battery-refresh-rate-sync-user.service` | oneshot at session start |
+| `/etc/systemd/system/systemd-{suspend,hibernate,...}.service.d/10-battery-refresh-rate-sync.conf` | re-apply after resume |
+| `/usr/share/icons/hicolor/scalable/apps/battery-refresh-rate-{ac,battery}.svg` | the "little monitor" icons |
+| `/usr/local/share/doc/battery-refresh-rate-sync/` | this README and the docs |
 
 ---
 

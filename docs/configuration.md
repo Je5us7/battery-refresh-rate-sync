@@ -2,8 +2,8 @@
 
 Two files are read, in this order (the last one wins):
 
-1. `/etc/refresh-rate-sync.conf` — system wide, installed by `install.sh`
-2. `~/.config/refresh-rate-sync.conf` — per user (only seen by `set-mode.sh`,
+1. `/etc/battery-refresh-rate-sync.conf` — system wide, installed by `install.sh`
+2. `~/.config/battery-refresh-rate-sync.conf` — per user (only seen by `set-mode.sh`,
    which is the part that runs inside your session)
 
 Format: plain `KEY=value` shell assignments, `#` comments. Since the service is
@@ -13,7 +13,7 @@ enough** — no daemon to restart, no logout needed.
 Verify what is in effect:
 
 ```bash
-sudo /usr/local/lib/refresh-rate-sync/apply.sh bat --dry-run   # target: BATTERY_HZ
+sudo /usr/local/lib/battery-refresh-rate-sync/apply.sh bat --dry-run   # target: BATTERY_HZ
 ```
 
 ---
@@ -42,7 +42,7 @@ Names come from your backend: `kscreen-doctor -o`, `xrandr -q`, `wlr-randr`,
 
 | Key | Default | Meaning |
 | --- | ------- | ------- |
-| `RRS_BACKEND` | `auto` | `auto`, or force one of `kde`, `hyprland`, `sway`, `wlr`, `x11`. |
+| `BFRS_BACKEND` | `auto` | `auto`, or force one of `kde`, `hyprland`, `sway`, `wlr`, `x11`. |
 
 With `auto` the first backend that returns a usable mode list wins, in this
 order: KDE (`kscreen-doctor`) → Hyprland (`hyprctl` + `jq`) → Sway (`swaymsg` +
@@ -56,11 +56,10 @@ Command line override (wins over the config file): `--backend=kde`.
 | Key | Default | Meaning |
 | --- | ------- | ------- |
 | `NOTIFY` | `1` | `0` = never show anything. |
-| `NOTIFY_ICON` | `1` | Use the installed `refresh-rate-ac.svg` / `refresh-rate-battery.svg` (a little monitor with an up/down arrow). |
+| `NOTIFY_ICON` | `1` | Use the installed `battery-refresh-rate-ac.svg` / `battery-refresh-rate-battery.svg` (a little monitor with an up/down arrow). |
 | `NOTIFY_SNAPSHOT` | `0` | `1` = attach a screenshot thumbnail to the notification. |
 | `NOTIFY_TIMEOUT` | `5000` | Lifetime in ms. |
 | `NOTIFY_FAIL` | `1` | Also notify when the change could not be made. |
-| `NOTIFY_LANG` | `auto` | `auto` (follows `LANG`/`LC_MESSAGES`), `es` or `en`. |
 
 ## Retries and timing
 
@@ -78,7 +77,7 @@ Command line override (wins over the config file): `--backend=kde`.
 | Key | Default | Meaning |
 | --- | ------- | ------- |
 | `USERS_WANTED` | `""` | Empty = every local graphical session. Otherwise a space separated list, e.g. `"alice bob"`. |
-| `LIBEXEC` | `/usr/local/lib/refresh-rate-sync` | Where `set-mode.sh` lives; only needed with `install.sh --libexec=`. |
+| `LIBEXEC` | `/usr/local/lib/battery-refresh-rate-sync` | Where `set-mode.sh` lives; only needed with `install.sh --libexec=`. |
 
 Only local, seated, `Class=user`, `Remote=no`, `Type=wayland|x11` sessions are
 considered, so SSH sessions and headless users are ignored.
@@ -118,11 +117,10 @@ RATE_TOLERANCE=0.5
 NO_BATTERY_STATE=ignore
 ```
 
-**Per user override**, e.g. user `bob` wants notifications in Spanish with a
-screenshot thumbnail (`~/.config/refresh-rate-sync.conf`):
+**Per user override**, e.g. user `bob` wants a screenshot thumbnail in the
+notification and one monitor left out (`~/.config/battery-refresh-rate-sync.conf`):
 
 ```ini
-NOTIFY_LANG=es
 NOTIFY_SNAPSHOT=1
 SKIP_OUTPUTS="DP-3 DP-4"
 ```

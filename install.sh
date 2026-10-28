@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# refresh-rate-sync installer -- generic Linux with systemd + udev
+# battery-refresh-rate-sync installer -- generic Linux with systemd + udev
 # (Arch/CachyOS, Debian/Ubuntu, Fedora, openSUSE, Void, ...).
 #
 # It can be run from a clone of the repository, or standalone: it downloads
@@ -11,8 +11,7 @@
 #       | sudo bash -s -- --repo=Je5us7/battery-refresh-rate-sync
 #   sudo ./install.sh --uninstall
 #
-# All comments in this project are in English; the desktop notifications are
-# bilingual (Spanish/English) and follow NOTIFY_LANG / $LANG.
+# All comments in this project, and the notification text, are in English.
 #
 set -euo pipefail
 
@@ -27,18 +26,18 @@ GITHUB_REF_DEFAULT="${GITHUB_REF:-main}"
 FILES=(
     README.md
     LICENSE
-    etc/refresh-rate-sync.conf
+    etc/battery-refresh-rate-sync.conf
     lib/apply.sh
     lib/set-mode.sh
-    udev/85-refresh-rate-sync.rules
-    systemd/refresh-rate-sync.service
-    systemd/user/refresh-rate-sync-user.service
+    udev/85-battery-refresh-rate-sync.rules
+    systemd/battery-refresh-rate-sync.service
+    systemd/user/battery-refresh-rate-sync-user.service
     systemd/suspend.d/systemd-suspend.conf
     systemd/suspend.d/systemd-hibernate.conf
     systemd/suspend.d/systemd-hybrid-sleep.conf
     systemd/suspend.d/systemd-suspend-then-hibernate.conf
-    icons/refresh-rate-ac.svg
-    icons/refresh-rate-battery.svg
+    icons/battery-refresh-rate-ac.svg
+    icons/battery-refresh-rate-battery.svg
     docs/index.md
     docs/architecture.md
     docs/configuration.md
@@ -52,7 +51,7 @@ EXEC_FILES=(lib/apply.sh lib/set-mode.sh)
 
 usage() {
     cat <<'EOF'
-refresh-rate-sync installer
+battery-refresh-rate-sync installer
 
   --repo=OWNER/NAME    GitHub repository used to download the files when they
                        are not next to this script
@@ -61,8 +60,8 @@ refresh-rate-sync installer
   --git                fetch the files with 'git clone' (SSH first) instead of
                        downloading them over HTTPS; use it for private repos
   --libexec=PATH       where the shell scripts go
-                       (default: <dest>/usr/local/lib/refresh-rate-sync)
-  --force-config       overwrite an existing /etc/refresh-rate-sync.conf
+                       (default: <dest>/usr/local/lib/battery-refresh-rate-sync)
+  --force-config       overwrite an existing /etc/battery-refresh-rate-sync.conf
   --no-apply           do not apply the current power state right after install
   --skip-user-unit     do not enable the per-session systemd user unit
   --uninstall          remove everything (same as uninstall.sh)
@@ -95,24 +94,24 @@ for a in "$@"; do
         --skip-user-unit)  SKIP_USER_UNIT=1 ;;
         --uninstall|-u)    UNINSTALL=1; NORM+=("$a") ;;
         --help|-h)         usage; exit 0 ;;
-        *) echo "refresh-rate-sync: unknown option: $a" >&2; usage; exit 2 ;;
+        *) echo "battery-refresh-rate-sync: unknown option: $a" >&2; usage; exit 2 ;;
     esac
 done
 
 have() { command -v "$1" >/dev/null 2>&1; }
 say()  { printf '%s\n' "$*"; }
-die()  { printf 'refresh-rate-sync: %s\n' "$*" >&2; exit 1; }
+die()  { printf 'battery-refresh-rate-sync: %s\n' "$*" >&2; exit 1; }
 
 # ---------------------------------------------------------------------------
 # Re-run as root (sudo if available, otherwise a polkit dialog through pkexec)
 # ---------------------------------------------------------------------------
-if [ "$(id -u)" != 0 ] && [ "${RRS_ROOTED:-}" != 1 ] && [ -z "$ROOT" ]; then
+if [ "$(id -u)" != 0 ] && [ "${BFRS_ROOTED:-}" != 1 ] && [ -z "$ROOT" ]; then
     if have sudo; then
-        say "refresh-rate-sync: re-running as root with sudo"
-        exec sudo env RRS_ROOTED=1 bash "$(readlink -f -- "$0")" ${NORM[@]+"${NORM[@]}"}
+        say "battery-refresh-rate-sync: re-running as root with sudo"
+        exec sudo env BFRS_ROOTED=1 bash "$(readlink -f -- "$0")" ${NORM[@]+"${NORM[@]}"}
     elif have pkexec; then
-        say "refresh-rate-sync: asking for root through polkit (dialog on screen)"
-        exec pkexec env RRS_ROOTED=1 DISPLAY="${DISPLAY:-}" WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-}" \
+        say "battery-refresh-rate-sync: asking for root through polkit (dialog on screen)"
+        exec pkexec env BFRS_ROOTED=1 DISPLAY="${DISPLAY:-}" WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-}" \
             XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-}" bash "$(readlink -f -- "$0")" ${NORM[@]+"${NORM[@]}"}
     else
         die "please run as root (no sudo and no pkexec found)"
@@ -157,10 +156,10 @@ fetch_tree_http() {
 }
 
 if [ ! -f "$SRC/lib/set-mode.sh" ]; then
-    CLEANUP=$(mktemp -d /tmp/refresh-rate-sync.XXXXXX)
+    CLEANUP=$(mktemp -d /tmp/battery-refresh-rate-sync.XXXXXX)
     SRC=$CLEANUP
     trap '[ -n "$CLEANUP" ] && rm -rf "$CLEANUP"' EXIT
-    say "refresh-rate-sync: files not found next to the script, fetching them"
+    say "battery-refresh-rate-sync: files not found next to the script, fetching them"
     if [ "$USE_GIT" = 1 ]; then
         fetch_tree_git || die "could not clone $REPO ($REF)"
     else
@@ -182,19 +181,19 @@ fi
 # ---------------------------------------------------------------------------
 # Install destinations (systemd/udev paths are the same on every distro)
 # ---------------------------------------------------------------------------
-: "${LIBEXEC:=$ROOT/usr/local/lib/refresh-rate-sync}"
+: "${LIBEXEC:=$ROOT/usr/local/lib/battery-refresh-rate-sync}"
 SYSD=$ROOT/etc/systemd/system
 USERUNITD=$ROOT/usr/local/lib/systemd/user
 UDEVD=$ROOT/etc/udev/rules.d
 CONFD=$ROOT/etc
-DOCD=$ROOT/usr/local/share/doc/refresh-rate-sync
+DOCD=$ROOT/usr/local/share/doc/battery-refresh-rate-sync
 ICOND=$ROOT/usr/share/icons/hicolor
 # apply.sh must know the very same LIBEXEC we pick here
 APPLY_SH="$LIBEXEC/apply.sh"
 
-say "== refresh-rate-sync: installing from $SRC"
+say "== battery-refresh-rate-sync: installing from $SRC"
 say "   scripts  -> $LIBEXEC"
-say "   config   -> $CONFD/refresh-rate-sync.conf"
+say "   config   -> $CONFD/battery-refresh-rate-sync.conf"
 
 # every destination must exist before we copy into it: with --dest those
 # directories do not exist yet (a fresh tree), unlike on a live system
@@ -211,30 +210,30 @@ install -d -m0755 "$LIBEXEC" "$LIBEXEC/icons" \
 install -m0755 "$SRC/lib/apply.sh"    "$LIBEXEC/apply.sh"
 install -m0755 "$SRC/lib/set-mode.sh" "$LIBEXEC/set-mode.sh"
 # keep a copy of the icons next to the scripts: set-mode.sh looks there too
-install -m0644 "$SRC/icons/refresh-rate-ac.svg"      "$LIBEXEC/icons/refresh-rate-ac.svg"
-install -m0644 "$SRC/icons/refresh-rate-battery.svg" "$LIBEXEC/icons/refresh-rate-battery.svg"
+install -m0644 "$SRC/icons/battery-refresh-rate-ac.svg"      "$LIBEXEC/icons/battery-refresh-rate-ac.svg"
+install -m0644 "$SRC/icons/battery-refresh-rate-battery.svg" "$LIBEXEC/icons/battery-refresh-rate-battery.svg"
 
 # --- 2. configuration (never clobber an edited file) ------------------------
-if [ -f "$CONFD/refresh-rate-sync.conf" ] && [ "$FORCE_CONFIG" != 1 ]; then
-    install -m0644 "$SRC/etc/refresh-rate-sync.conf" "$CONFD/refresh-rate-sync.conf.dpkg-new"
+if [ -f "$CONFD/battery-refresh-rate-sync.conf" ] && [ "$FORCE_CONFIG" != 1 ]; then
+    install -m0644 "$SRC/etc/battery-refresh-rate-sync.conf" "$CONFD/battery-refresh-rate-sync.conf.dpkg-new"
     say "   existing configuration kept; new default saved as .dpkg-new"
 else
-    install -m0644 "$SRC/etc/refresh-rate-sync.conf" "$CONFD/refresh-rate-sync.conf"
+    install -m0644 "$SRC/etc/battery-refresh-rate-sync.conf" "$CONFD/battery-refresh-rate-sync.conf"
 fi
 # the root side needs to know a custom LIBEXEC (if --libexec was used)
-if [ "$LIBEXEC" != /usr/local/lib/refresh-rate-sync ]; then
-    if ! grep -q '^LIBEXEC=' "$CONFD/refresh-rate-sync.conf" 2>/dev/null; then
+if [ "$LIBEXEC" != /usr/local/lib/battery-refresh-rate-sync ]; then
+    if ! grep -q '^LIBEXEC=' "$CONFD/battery-refresh-rate-sync.conf" 2>/dev/null; then
         printf '\n# used by apply.sh to find set-mode.sh\nLIBEXEC=%s\n' "$LIBEXEC" \
-            >> "$CONFD/refresh-rate-sync.conf"
+            >> "$CONFD/battery-refresh-rate-sync.conf"
     fi
 fi
 
 # --- 3. systemd -------------------------------------------------------------
-install -m0644 "$SRC/systemd/refresh-rate-sync.service"            "$SYSD/refresh-rate-sync.service"
-install -m0644 "$SRC/systemd/user/refresh-rate-sync-user.service"  "$USERUNITD/refresh-rate-sync-user.service"
+install -m0644 "$SRC/systemd/battery-refresh-rate-sync.service"            "$SYSD/battery-refresh-rate-sync.service"
+install -m0644 "$SRC/systemd/user/battery-refresh-rate-sync-user.service"  "$USERUNITD/battery-refresh-rate-sync-user.service"
 for u in systemd-suspend systemd-hibernate systemd-hybrid-sleep systemd-suspend-then-hibernate; do
     install -m0644 "$SRC/systemd/suspend.d/$u.conf" \
-        "$SYSD/$u.service.d/10-refresh-rate-sync.conf"
+        "$SYSD/$u.service.d/10-battery-refresh-rate-sync.conf"
 done
 install -m0644 "$SRC/README.md"  "$DOCD/README.md"
 install -m0644 "$SRC/LICENSE"    "$DOCD/LICENSE" 2>/dev/null || true
@@ -243,11 +242,11 @@ for d in index architecture configuration compatibility installing troubleshooti
 done
 
 # --- 4. udev ----------------------------------------------------------------
-install -m0644 "$SRC/udev/85-refresh-rate-sync.rules" "$UDEVD/85-refresh-rate-sync.rules"
+install -m0644 "$SRC/udev/85-battery-refresh-rate-sync.rules" "$UDEVD/85-battery-refresh-rate-sync.rules"
 
 # --- 5. notification icons --------------------------------------------------
-install -m0644 "$SRC/icons/refresh-rate-ac.svg"      "$ICOND/scalable/apps/refresh-rate-ac.svg"
-install -m0644 "$SRC/icons/refresh-rate-battery.svg" "$ICOND/scalable/apps/refresh-rate-battery.svg"
+install -m0644 "$SRC/icons/battery-refresh-rate-ac.svg"      "$ICOND/scalable/apps/battery-refresh-rate-ac.svg"
+install -m0644 "$SRC/icons/battery-refresh-rate-battery.svg" "$ICOND/scalable/apps/battery-refresh-rate-battery.svg"
 if [ -z "$ROOT" ] && have gtk-update-icon-cache; then
     gtk-update-icon-cache -q -t -f "$ICOND" 2>/dev/null || true
 fi
@@ -259,7 +258,7 @@ fi
 
 # --- 6. enable everything ---------------------------------------------------
 systemctl daemon-reload
-systemctl enable refresh-rate-sync.service >/dev/null 2>&1 || true
+systemctl enable battery-refresh-rate-sync.service >/dev/null 2>&1 || true
 udevadm control --reload-rules
 
 # The per-session unit is enabled "globally": the symlink lands in
@@ -270,7 +269,7 @@ if [ -z "$TARGET_USER" ] || [ "$TARGET_USER" = root ]; then
     TARGET_USER=$(loginctl list-sessions --no-legend 2>/dev/null | awk '$6=="user" && $4!="-" {print $3; exit}')
 fi
 if [ "$SKIP_USER_UNIT" != 1 ]; then
-    if systemctl --user --global enable refresh-rate-sync-user.service 2>/dev/null; then
+    if systemctl --user --global enable battery-refresh-rate-sync-user.service 2>/dev/null; then
         say "   user unit enabled (globally, for every graphical session)"
     else
         uid=$(id -u "$TARGET_USER" 2>/dev/null || true)
@@ -278,27 +277,27 @@ if [ "$SKIP_USER_UNIT" != 1 ]; then
             runuser -u "$TARGET_USER" -- env \
                 XDG_RUNTIME_DIR=/run/user/$uid \
                 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$uid/bus \
-                systemctl --user enable refresh-rate-sync-user.service 2>/dev/null || \
-                say "   WARNING: enable it yourself: systemctl --user enable --now refresh-rate-sync-user.service"
+                systemctl --user enable battery-refresh-rate-sync-user.service 2>/dev/null || \
+                say "   WARNING: enable it yourself: systemctl --user enable --now battery-refresh-rate-sync-user.service"
         else
-            say "   WARNING: enable it yourself: systemctl --user enable --now refresh-rate-sync-user.service"
+            say "   WARNING: enable it yourself: systemctl --user enable --now battery-refresh-rate-sync-user.service"
         fi
     fi
 fi
 
 # --- 7. apply the current state --------------------------------------------
 if [ "$DO_APPLY" = 1 ]; then
-    systemctl restart refresh-rate-sync.service || true
+    systemctl restart battery-refresh-rate-sync.service || true
     sleep 2
     say ""
     say "== last run =="
-    systemctl --no-pager --lines=6 status refresh-rate-sync.service 2>/dev/null | sed 's/^/   /' || true
+    systemctl --no-pager --lines=6 status battery-refresh-rate-sync.service 2>/dev/null | sed 's/^/   /' || true
 fi
 
 say ""
 say "Done."
-say "  config : $CONFD/refresh-rate-sync.conf   (applies on the next event, no restart needed)"
+say "  config : $CONFD/battery-refresh-rate-sync.conf   (applies on the next event, no restart needed)"
 say "  test   : sudo $APPLY_SH --status"
 say "           sudo $APPLY_SH bat --dry-run"
-say "  logs   : journalctl -t refresh-rate-sync -f"
+say "  logs   : journalctl -t battery-refresh-rate-sync -f"
 say "  docs   : $DOCD/README.md  and  $DOCD/docs/"

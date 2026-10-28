@@ -11,11 +11,11 @@
 #
 set -uo pipefail
 
-LIBEXEC=${LIBEXEC:-/usr/local/lib/refresh-rate-sync}
+LIBEXEC=${LIBEXEC:-/usr/local/lib/battery-refresh-rate-sync}
 SET_MODE="$LIBEXEC/set-mode.sh"
 PATH_FIXED=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-CONF_SYSTEM=/etc/refresh-rate-sync.conf
+CONF_SYSTEM=/etc/battery-refresh-rate-sync.conf
 USERS_WANTED=""      # empty = every local graphical session
 MIN_WAIT=1           # seconds to let the kernel/hardware settle before acting
 
@@ -23,7 +23,7 @@ MIN_WAIT=1           # seconds to let the kernel/hardware settle before acting
 [ -r "$CONF_SYSTEM" ] && . "$CONF_SYSTEM"
 
 have() { command -v "$1" >/dev/null 2>&1; }
-log()  { logger -t refresh-rate-sync -- "$*" 2>/dev/null || printf '%s\n' "$*" >&2; }
+log()  { logger -t battery-refresh-rate-sync -- "$*" 2>/dev/null || printf '%s\n' "$*" >&2; }
 die()  { log "apply: $*"; exit 1; }
 
 STATE_ARG=auto FORCE=0 STATUS=0; EXTRA=()

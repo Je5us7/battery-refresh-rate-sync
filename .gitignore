@@ -7,7 +7,7 @@
 
 # installer leftovers
 *.dpkg-new
-refresh-rate-sync.*.png
+battery-refresh-rate-sync.*.png
 
 # scratch trees used while developing
 /pkg/

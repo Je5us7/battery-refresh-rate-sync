@@ -5,15 +5,15 @@
 ```
 install.sh                     installer (root escalation, optional GitHub bootstrap)
 uninstall.sh                   remover
-etc/refresh-rate-sync.conf     default configuration  -> /etc/
-lib/apply.sh                   root side              -> /usr/local/lib/refresh-rate-sync/
-lib/set-mode.sh                session side           -> /usr/local/lib/refresh-rate-sync/
-udev/85-refresh-rate-sync.rules                       -> /etc/udev/rules.d/
-systemd/refresh-rate-sync.service                     -> /etc/systemd/system/
-systemd/user/refresh-rate-sync-user.service           -> /usr/local/lib/systemd/user/
+etc/battery-refresh-rate-sync.conf     default configuration  -> /etc/
+lib/apply.sh                   root side              -> /usr/local/lib/battery-refresh-rate-sync/
+lib/set-mode.sh                session side           -> /usr/local/lib/battery-refresh-rate-sync/
+udev/85-battery-refresh-rate-sync.rules                       -> /etc/udev/rules.d/
+systemd/battery-refresh-rate-sync.service                     -> /etc/systemd/system/
+systemd/user/battery-refresh-rate-sync-user.service           -> /usr/local/lib/systemd/user/
 systemd/suspend.d/*.conf       resume drop-ins        -> /etc/systemd/system/<unit>.service.d/
-icons/refresh-rate-*.svg       notification icons     -> /usr/share/icons/hicolor/scalable/apps/
-docs/*.md                      this documentation    -> /usr/local/share/doc/refresh-rate-sync/docs/
+icons/battery-refresh-rate-*.svg  notification icons     -> /usr/share/icons/hicolor/scalable/apps/
+docs/*.md                      this documentation    -> /usr/local/share/doc/battery-refresh-rate-sync/docs/
 tests/run-tests.sh             headless behavior tests (not installed)
 tests/fixtures/*.txt|json      saved dumps of xrandr / wlr-randr / hyprctl / swaymsg
 .github/workflows/ci.yml       CI: bash -n, shellcheck, test suite
@@ -59,7 +59,7 @@ NAME WIDTH HEIGHT Hz MODE_ID IS_CURRENT(0|1)
 2. Add a branch to `apply_one()`: `name w h rate id -> command`.
 3. Add detection in `backend_candidates()` (a cheap, unambiguous probe: tool
    present **and** the session variable/socket it needs).
-4. Add the name to the two `case` lists that validate `RRS_BACKEND`
+4. Add the name to the two `case` lists that validate `BFRS_BACKEND`
    (`backend_candidates()` and the `--backend=` argument) and to `list_modes()`.
 5. Test it offline with a fake tool (see below), then on a real session.
 
@@ -88,7 +88,7 @@ stub commands injected through `PATH`, and asserts the guarantees:
   `DP-1` is a substring of `eDP-1`.
 
 The suite is hermetic: each case writes its own `XDG_CONFIG_HOME` override, which
-is the last config file read, so an installed `/etc/refresh-rate-sync.conf`
+is the last config file read, so an installed `/etc/battery-refresh-rate-sync.conf`
 cannot influence a test.
 
 To exercise a single backend by hand:
@@ -108,8 +108,8 @@ old (`modes`) and new (`availableModes` / `available_modes`) key spellings.
 Full round trip on a live session (this really changes the panel):
 
 ```bash
-~/refresh-rate-sync/lib/set-mode.sh bat          # expect a notification, rate drops
-~/refresh-rate-sync/lib/set-mode.sh ac           # back to max
+~/battery-refresh-rate-sync/lib/set-mode.sh bat          # expect a notification, rate drops
+~/battery-refresh-rate-sync/lib/set-mode.sh ac           # back to max
 kscreen-doctor -o | sed 's/\x1b\[[0-9;]*m//g' | grep -A1 'eDP-1' | grep Modes
 ```
 
@@ -117,7 +117,7 @@ Simulating the udev event without touching the cable:
 
 ```bash
 sudo udevadm trigger --action=change --subsystem-match=power_supply
-journalctl -t refresh-rate-sync -n 20
+journalctl -t battery-refresh-rate-sync -n 20
 ```
 
 ## Style and constraints
@@ -129,8 +129,8 @@ journalctl -t refresh-rate-sync -n 20
 * GNU `awk` is assumed (`SUBSEP`, `tostring` style arrays, `gensub` free); the
   scripts are ASCII-only so they work in any locale, including `LC_ALL=C` —
   every numeric `awk` invocation pins `LC_ALL=C`.
-* Comments in English. User-visible strings are bilingual through `t <es> <en>`
-  and follow `NOTIFY_LANG` / `LANG`.
+* Comments and user-visible strings are in English, so the tool logs, notifies
+  and documents itself in one language on every machine.
 * No write access outside `$XDG_RUNTIME_DIR` (the temp screenshot) — the tool
   never touches dotfiles.
 * Keep everything idempotent: running it twice in a row must not notify twice
