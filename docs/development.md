@@ -16,7 +16,6 @@ icons/battery-refresh-rate-*.svg  notification icons     -> /usr/share/icons/hic
 docs/*.md                      this documentation    -> /usr/local/share/doc/battery-refresh-rate-sync/docs/
 tests/run-tests.sh             headless behavior tests (not installed)
 tests/fixtures/*.txt|json      saved dumps of xrandr / wlr-randr / hyprctl / swaymsg
-.github/workflows/ci.yml       CI: bash -n, shellcheck, test suite
 ```
 
 The two shell scripts hold 100 % of the logic; the rest is glue.

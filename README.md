@@ -62,32 +62,11 @@ cd battery-refresh-rate-sync
 ./install.sh            # asks for root itself: sudo, or a polkit dialog
 ```
 
-`install.sh` can also fetch the project by itself, with nothing cloned. On a
-**public** repository that is a one-liner:
+`install.sh` can also fetch the project by itself, with nothing cloned:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Je5us7/battery-refresh-rate-sync/main/install.sh | sudo bash
 ```
-
-On a **private** repository `raw.githubusercontent.com` needs a token, so let the
-script use your SSH key instead -- either `--git` with a single copied script:
-
-```bash
-curl -fsSL "https://raw.githubusercontent.com/Je5us7/battery-refresh-rate-sync/main/install.sh?token=…" -o /tmp/i.sh
-sudo bash /tmp/i.sh --git
-```
-
-…or simply clone, which is what this project does on your own machine:
-
-```bash
-git clone --depth 1 git@github.com:Je5us7/battery-refresh-rate-sync.git /tmp/bfrs
-sudo bash /tmp/bfrs/install.sh
-```
-
-`--repo=` / `--ref=` / `--git` say where the files come from; when the HTTPS
-download fails (404 on a private repo) the script falls back to `git clone` over
-SSH automatically. `GITHUB_REPO_DEFAULT` at the top of `install.sh` already
-points at this repository, so no flag is needed for the default branch.
 
 Uninstall:
 
@@ -196,24 +175,6 @@ More: [docs/compatibility.md](docs/compatibility.md).
 * [docs/installing.md](docs/installing.md) — options, packaging, other distros
 * [docs/troubleshooting.md](docs/troubleshooting.md) — common problems
 * [docs/development.md](docs/development.md) — data flow, adding a backend, style
-
----
-
-## Tests
-
-The interesting property is that the rate changes and the resolution does not,
-so it is pinned by a suite that runs headless, without root and without a
-display server: every case feeds a saved `xrandr` / `wlr-randr` / `hyprctl` /
-`swaymsg` dump to `set-mode.sh --dry-run` through a stub command in `PATH`.
-
-```bash
-./tests/run-tests.sh
-# 27 passed, 0 failed
-```
-
-Fixtures live in `tests/fixtures/`; how to add a case is described in
-[docs/development.md](docs/development.md). GitHub Actions runs the suite plus
-`bash -n` and `shellcheck` on every push ([.github/workflows/ci.yml](.github/workflows/ci.yml)).
 
 ---
 
