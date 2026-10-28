@@ -1,0 +1,23 @@
+# /etc/udev/rules.d/85-refresh-rate-sync.rules
+#
+# The single hook of this project: when the kernel announces that the mains
+# power supply changed (charger plugged / unplugged), start the oneshot unit
+# refresh-rate-sync.service.
+#
+# There is no polling and no daemon of our own: udev is already running on
+# every Linux, and while nothing happens this costs no CPU, no RAM and no I/O.
+#
+# ACTION=="change" is what power_supply_changed() emits when "online" flips.
+# ATTR{type}=="Mains" selects the charger whatever it is called (ADP0, AC,
+# power, PWR, 820976CA, ...).
+
+ACTION=="change", SUBSYSTEM=="power_supply", ATTR{type}=="Mains", TAG+="systemd", RUN+="/usr/bin/systemctl --no-block restart refresh-rate-sync.service"
+
+# Fallback for rare drivers that do not expose the "type" sysfs attribute
+ACTION=="change", SUBSYSTEM=="power_supply", KERNEL=="ADP*|AC*|ACAD|power|PWR|820976CA*|tpacpi*|psu*", TEST!="type", TAG+="systemd", RUN+="/usr/bin/systemctl --no-block restart refresh-rate-sync.service"
+
+# Checking:
+#   sudo udevadm control --reload-rules
+#   sudo udevadm verify /etc/udev/rules.d/85-refresh-rate-sync.rules
+#   sudo udevadm monitor -p -s power_supply      # watch events while unplugging
+#   sudo systemctl restart refresh-rate-sync.service   # manual trigger

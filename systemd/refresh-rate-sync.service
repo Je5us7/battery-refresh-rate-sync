@@ -1,0 +1,27 @@
+[Unit]
+Description=refresh-rate-sync: set the refresh rate according to the power state
+Documentation=file:/usr/local/share/doc/refresh-rate-sync/README.md file:/usr/local/share/doc/refresh-rate-sync/docs/index.md
+Wants=systemd-logind.service
+After=systemd-logind.service systemd-user-sessions.service
+# started over and over from a udev rule: never rate-limit it
+StartLimitIntervalSec=0
+StartLimitBurst=0
+
+[Service]
+Type=oneshot
+RemainAfterExit=no
+UMask=0077
+ExecStart=/usr/local/lib/refresh-rate-sync/apply.sh auto
+# low priority: a cosmetic adjustment must not compete with the desktop
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+# memory ceiling while the trigger runs (it lives for about two seconds)
+MemoryMax=192M
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=refresh-rate-sync
+
+[Install]
+# also apply the right rate once at boot (the per-session unit does it at login)
+WantedBy=multi-user.target

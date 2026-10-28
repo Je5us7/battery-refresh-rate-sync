@@ -1,0 +1,22 @@
+[Unit]
+Description=refresh-rate-sync: apply the right refresh rate when the session starts
+Documentation=file:/usr/local/share/doc/refresh-rate-sync/README.md file:/usr/local/share/doc/refresh-rate-sync/docs/index.md
+PartOf=graphical-session.target
+After=graphical-session.target
+# kscreen-doctor / hyprctl / swaymsg / xrandr all need a running compositor
+StartLimitIntervalSec=0
+StartLimitBurst=0
+
+[Service]
+Type=oneshot
+RemainAfterExit=no
+# small grace period so the compositor and kded are ready
+ExecStartPre=-/usr/bin/sleep 2
+ExecStart=/usr/local/lib/refresh-rate-sync/set-mode.sh auto --force
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=refresh-rate-sync
+
+[Install]
+# enabled with --global, so it applies to every user's graphical session
+WantedBy=graphical-session.target

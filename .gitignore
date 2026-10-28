@@ -1,0 +1,15 @@
+# local junk
+*.bak
+*.tmp
+*.swp
+*~
+.DS_Store
+
+# installer leftovers
+*.dpkg-new
+refresh-rate-sync.*.png
+
+# scratch trees used while developing
+/pkg/
+/pkgdir/
+/.build/
