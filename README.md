@@ -58,7 +58,7 @@ unplug the charger ──► kernel uevent (POWER_SUPPLY_ONLINE=0)
 
 ```bash
 # from a clone
-git clone https://github.com/Je5us7/refresh-rate-sync
+git clone https://github.com/Je5us7/battery-refresh-rate-sync
 cd refresh-rate-sync
 ./install.sh            # re-executes itself through sudo (or a polkit dialog)
 ```
@@ -66,8 +66,8 @@ cd refresh-rate-sync
 or the one-liner (it downloads only what it needs, installs and removes itself):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Je5us7/refresh-rate-sync/main/install.sh \
-  | sudo bash -s -- --repo=Je5us7/refresh-rate-sync
+curl -fsSL https://raw.githubusercontent.com/Je5us7/battery-refresh-rate-sync/main/install.sh \
+  | sudo bash -s -- --repo=Je5us7/battery-refresh-rate-sync
 ```
 
 `--repo=` / `--ref=` select the repository and branch used for the download; if
